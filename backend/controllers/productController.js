@@ -19,6 +19,7 @@ export const getProducts = async (req, res) => {
 export const createProduct = async (req, res) => {
   //User will put these info in the request body.
   const { name, price, image } = req.body;
+  console.log(name, price, image);
 
   if (!name || !price || !image) {
     return res
@@ -27,8 +28,8 @@ export const createProduct = async (req, res) => {
   }
 
   try {
-    const newProduct = await sql`INSERT INTO products (name, price, image)
-    VALUE (${name}, ${price}, ${image})
+    const newProduct = await sql`INSERT INTO products (name,price,image)
+    VALUES (${name},${price},${image})
     RETURNING *
     `;
 
@@ -47,7 +48,7 @@ export const getProduct = async (req, res) => {
   try {
     const product = await sql`SELECT * FROM products WHERE id = ${id}`;
 
-    res.status(200).json({ success: false, data: product[0] });
+    res.status(200).json({ success: true, data: product[0] });
   } catch (err) {
     console.log("Error getProduct", err);
     res.status(500).json({ success: false, message: "server error" });
@@ -62,7 +63,10 @@ export const updateProduct = async (req, res) => {
         UPDATE products
         SET name=${name}, price = ${price}, image = ${image}
         WHERE id=${id}
+        RETURNING *
     `;
+
+    console.log(updateProduct.length);
 
     if (updateProduct.length === 0) {
       return res.status(404).json({
@@ -70,17 +74,18 @@ export const updateProduct = async (req, res) => {
         message: "Product not found",
       });
     }
+    res.status(200).json({ success: true, data: updateProduct });
   } catch (err) {
     console.log("Error updateProduct", err);
     res.status(500).json({ success: false, message: "server error" });
   }
 };
 export const deleteProduct = async (req, res) => {
-  const { id } = res.params;
+  const { id } = req.params;
   try {
     const deletedProduct = await sql`
         DELETE FROM products WHERE id = ${id}
-        RETURN *
+        RETURNING *
         `;
 
     if (deletedProduct.length === 0) {
@@ -90,7 +95,7 @@ export const deleteProduct = async (req, res) => {
       });
     }
     res.status(200).json({ success: true, data: deletedProduct[0] });
-  } catch {
+  } catch (err) {
     console.log("Error deleteProduct", err);
     res.status(500).json({ success: false, message: "server error" });
   }
