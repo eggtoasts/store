@@ -7,6 +7,11 @@ import dotenv from "dotenv";
 import productRoutes from "./routes/productRoutes.js";
 import { sql } from "./config/db.js";
 import { aj } from "./lib/arcjet.js";
+import session from "express-session";
+import passport from "passport";
+import { Strategy } from "passport-local";
+
+const LocalStorage = Strategy;
 
 dotenv.config();
 
@@ -54,6 +59,20 @@ app.use(async (req, res, next) => {
 });
 
 app.use("/api/products", productRoutes);
+
+async function userDB() {
+  try {
+    await sql`
+       CREATE TABLE IF NOT EXISTS users(id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY, username VARCHAR(255), password VARCHAR(255));
+        `;
+
+    console.log("Database has been init sucessfully");
+  } catch (err) {
+    console.log("Error initializing user DB", err);
+  }
+}
+
+userDB();
 
 async function initDB() {
   try {
